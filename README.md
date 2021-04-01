@@ -1,7 +1,5 @@
 WELCOME TO MY REPO FOR CODER ONE SUBMISSION
-
-
-
+```
           T A C T I C A L     E S P I O N A G E       A C T I O N           
                  __             ___       ____                             
  /'\_/`\        /\ \__         /\_ \     /\  _`\                           
@@ -20,7 +18,7 @@ WELCOME TO MY REPO FOR CODER ONE SUBMISSION
                           \/_____/\/___/ \/____/ \/_/\/__,_ /
  
                                      A Hideo Kojima masterpiece...
-
+```
 Boss,
 
 It doesn't look like the new metal gear prototype has any form of intelligence yet. Our top scientist has recently learned PyTorch and decided to create some sort of AI using predictive machine learning. If you ask me boss, I prefer when gathering intel and counter-intelligence was done on the field instead by a computer  but things have changed since your return at mother base.
