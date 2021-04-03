@@ -1,0 +1,30 @@
+Needed to install pymunk==5.7.0 to have the game running
+here's some quick commands
+
+When you want to agents to fight one another (need to find a way to automate this)
+python -m coderone.dungeon.main modular_agent/stand_still.py modular_agent/stand_still.py --headless 
+Interactive mode:
+python -m coderone.dungeon.main modular_agent/stand_still.py --interactive 
+
+The input for the NN will be the game state (class object):
+    game_state.is_over = Bool
+    game_state.tick_number int (clock)
+    game_state.size = tuple (x * y size)
+    game_state.bombs = list of tuples 
+
+The second input is the player state:
+    player_state.id = int (irrelevant)
+    player_state.ammo = int (current bomb count)
+    player_state.hp = int (amount of hp)
+
+each turn the agent (us) must return a move through next_move (action)
+choices are: 
+    '' = do nothing
+    l = left
+    r = right
+    u = up
+    d = down
+    p = place a bomb
+
+more info at:
+https://www.notion.so/Game-Documentation-9b130e1195fc404cbf1d6ad38dbb4832
