@@ -60,8 +60,8 @@ class Agent:
             'playerInt':player_state.id,
             'playerLocation':player_state.location
             }
-        print(playerStateAsset['playerInt'])
-        print(playerStateAsset['playerLocation'])
+        # print(playerStateAsset['playerInt'])
+        # print(playerStateAsset['playerLocation'])
 
         gameStateAsset = {
             'id': game_state.indestructible_blocks,
@@ -72,13 +72,13 @@ class Agent:
             't': game_state.treasure
             }
         
-        # place our agen in an x,y location of our np array
+        # place our agent in an x,y location of our np array
         x,y = zip(playerStateAsset['playerLocation'])
         x = x[0]
         y = 9 - y[0]
-        
-        # populating the np arry with object representation of the game world
         visionArray[y][x] = playerStateAsset['playerInt']
+        
+        # populating the np array with object representation of the game world
         for assetName, assetTupple in gameStateAsset.items():
             for singleAsset in assetTupple:
                 #(x,y) - (x = columns, y = rows)
@@ -89,6 +89,26 @@ class Agent:
                 # print(assetName)
                 # 10-y 12 -x 
                 visionArray[y][x] = assetName
+
+        # obtaining the opposite agent location
+        opponentLocation = game_state.opponents(playerStateAsset['playerInt'])[0]
+        # place the opposite agent in an x,y location of our np array
+        x = opponentLocation[0]
+        y = 9 - opponentLocation[1]
+        # since we can obtain our own int with the player state but we can't know at the satrt.
+        if playerStateAsset['playerInt'] == 0:
+            visionArray[y][x] = 1
+        else:
+            visionArray[y][x] = 0
+
+       # print(opponentLocation)
+       # print(f"Player at x:{opponentLocation[0]} y:{9 - opponentLocation[1]}")
+
+        #for index, cell in np.ndenumerate(visionArray):
+        #    #print(f'type:{type(cell)} -> {cell}')
+        #    if cell is None:
+        #        possiblePlayerLoc = game_state.entity_at(index)
+        #        print(f'location: {index}, item:{possiblePlayerLoc}')
 
         # for values = None use game_state.entity_at(location) to find the other player (must pass a tupple)
         # also because we only have 100ms I am curious to see the time it takes to execute the action check (https://github.com/pyutils/line_profiler)
