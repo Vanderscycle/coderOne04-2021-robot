@@ -2,9 +2,9 @@ Needed to install pymunk==5.7.0 to have the game running
 here's some quick commands
 
 When you want to agents to fight one another (need to find a way to automate this)
-python -m coderone.dungeon.main modular_agent/stand_still.py modular_agent/stand_still.py --headless 
+python -m coderone.dungeon.main modular_agent/metalGearZEKE.py modular_agent/metalGearZEKE.py --headless 
 Interactive mode:
-python -m coderone.dungeon.main modular_agent/stand_still.py --interactive 
+python -m coderone.dungeon.main modular_agent/metalGearZEKE.py --interactive 
 
 The input for the NN will be the game state (class object):
     game_state.is_over = Bool
