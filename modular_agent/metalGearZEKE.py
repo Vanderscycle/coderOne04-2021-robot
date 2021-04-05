@@ -4,7 +4,8 @@ Metal Gear ZEKE was the first fully bipedal tank. It was designed by the Militai
 '''
 import random
 import numpy as np
-
+# measuring efficiency
+from time import time
 
 class Agent:
 
@@ -23,9 +24,12 @@ class Agent:
         """
                 
         action = random.choice(Agent.actions)
+        begin = time()  
         print(self.arrayVision(game_state, player_state))#print(game_state.all_blocks)
+        end = time()
+        # total time taken
+        print(f"total runtime of the program is {end - begin}")
         return action
-
 
     def arrayVision(self, game_state, player_state):
         """
@@ -42,8 +46,10 @@ class Agent:
         returns: String array representing the board
 
             legend:
-                0: Player 1
-                1: Player 2
+                X: our agent
+                E: ennemy agent
+                Xb: agent and bomb on same tile
+                Eb: ennemy agent and bomb on same title
                 ib: indestructible block
                 sb: wooden block
                 ob: ore block
@@ -51,6 +57,7 @@ class Agent:
                 a: ammo (+1)
                 t: treasure chest
                 :function: TODO
+        known issue: when E disappears (our robot or the ennemy agent has placed a bomb so must we ensure for that eventuality)
 
         """
 
@@ -76,8 +83,7 @@ class Agent:
         x,y = zip(playerStateAsset['playerLocation'])
         x = x[0]
         y = 9 - y[0]
-        visionArray[y][x] = playerStateAsset['playerInt']
-        
+        visionArray[y][x] = 'X'        
         # populating the np array with object representation of the game world
         for assetName, assetTupple in gameStateAsset.items():
             for singleAsset in assetTupple:
@@ -95,21 +101,8 @@ class Agent:
         # place the opposite agent in an x,y location of our np array
         x = opponentLocation[0]
         y = 9 - opponentLocation[1]
-        # since we can obtain our own int with the player state but we can't know at the satrt.
-        if playerStateAsset['playerInt'] == 0:
-            visionArray[y][x] = 1
-        else:
-            visionArray[y][x] = 0
+        # since its possible that we may be either agent 1 or 0 we want the target to always be constant (E)
+        visionArray[y][x] = 'E'
 
-       # print(opponentLocation)
-       # print(f"Player at x:{opponentLocation[0]} y:{9 - opponentLocation[1]}")
-
-        #for index, cell in np.ndenumerate(visionArray):
-        #    #print(f'type:{type(cell)} -> {cell}')
-        #    if cell is None:
-        #        possiblePlayerLoc = game_state.entity_at(index)
-        #        print(f'location: {index}, item:{possiblePlayerLoc}')
-
-        # for values = None use game_state.entity_at(location) to find the other player (must pass a tupple)
         # also because we only have 100ms I am curious to see the time it takes to execute the action check (https://github.com/pyutils/line_profiler)
         return visionArray
