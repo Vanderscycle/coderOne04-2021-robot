@@ -58,6 +58,9 @@ class Agent:
                 t: treasure chest
                 :function: TODO
         known issue: when E disappears (our robot or the ennemy agent has placed a bomb so must we ensure for that eventuality)
+        Solved by changing the grid value assignement.
+
+        quirk, once a bomb is placed you can move over time. When we place a bomb tho, our agent and the bomb can sit on the same tile tho.
 
         """
 
@@ -79,11 +82,6 @@ class Agent:
             't': game_state.treasure
             }
         
-        # place our agent in an x,y location of our np array
-        x,y = zip(playerStateAsset['playerLocation'])
-        x = x[0]
-        y = 9 - y[0]
-        visionArray[y][x] = 'X'        
         # populating the np array with object representation of the game world
         for assetName, assetTupple in gameStateAsset.items():
             for singleAsset in assetTupple:
@@ -95,6 +93,12 @@ class Agent:
                 # print(assetName)
                 # 10-y 12 -x 
                 visionArray[y][x] = assetName
+
+        # place our agent in an x,y location of our np array
+        x,y = zip(playerStateAsset['playerLocation'])
+        x = x[0]
+        y = 9 - y[0]
+        visionArray[y][x] = 'X'        
 
         # obtaining the opposite agent location
         opponentLocation = game_state.opponents(playerStateAsset['playerInt'])[0]
