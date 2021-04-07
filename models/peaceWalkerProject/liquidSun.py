@@ -17,7 +17,7 @@ class AINetMK1(nn.Module):
         """
         super().__init__()
         # input will be each square of the game (10x12 grid) have to figureouyt the encoding.
-        self.fc1 = nn.Linear(10*42,32)
+        self.fc1 = nn.Linear(10*12,32)
         self.fc2 = nn.Linear(32,32)
         self.fc3 = nn.Linear(32,32)
         # there are only 6 actions: ['','u','d','l','r','p']
@@ -50,27 +50,31 @@ testLayout = np.array([['id', 'ob' ,None ,None ,'id', None, None, None, None, No
                         [None, 'ob', None, 'a' ,None ,None ,None ,None ,'id', None, None, 'sb'],
                         [None, None, None, None, 'a' ,'sb' ,None ,None ,None, 'sb', 'id', None]],dtype='object')
 
-# test numpy array with nonetype entries
-# print(testLayout)
+print(testLayout)
+print(testLayout.dtype)
+
+# Encoding the input data
+encoderDict = {None:0,'X':1,'E':2,'b':3,'a':4,'t':5,'ob':6,'sb':7,'id':8}
 for rowidx, row in enumerate(testLayout):
     for colidx, item in enumerate(row):
-        if item is None:
-            testLayout[rowidx][colidx] = 'floor'
+        testLayout[rowidx][colidx] = encoderDict[item]
+# the default is float32 
+# if I want to change later https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-double-but-got-scalar-type-float-for-argument-2-weight/38961/8
+testLayout = testLayout.astype('float32')
 
 environmentUniqueValue = np.unique(testLayout)
+print(environmentUniqueValue)
 
 # test numpy array without nonetype entries
-print(environmentUniqueValue)
-from sklearn.preprocessing import OneHotEncoder
-
-enc = OneHotEncoder(sparse=False)
-encodedTestLayout = enc.fit_transform(testLayout)
-print(encodedTestLayout)
+print(testLayout)
+print(testLayout.dtype)
 
 print(testLayout.shape)
-print(encodedTestLayout.shape)
-testLayout = torch.from_numpy(encodedTestLayout)
-# will have to adapt the input size of the NN due to the encoding
-testLayout = testLayout.view(-1,10*42)
+testLayout = torch.from_numpy(testLayout)
+# flattening the grid
+testLayout = testLayout.view(-1,10*12)
 print(testLayout)
 output = net(testLayout)
+
+# need to map the output with an action.
+print(output)

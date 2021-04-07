@@ -50,7 +50,7 @@ class Agent:
                 E: ennemy agent
                 Xb: agent and bomb on same tile
                 Eb: ennemy agent and bomb on same title
-                ib: indestructible block
+                id: indestructible block
                 sb: wooden block
                 ob: ore block
                 b: bomb (armed)
