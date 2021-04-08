@@ -14,7 +14,8 @@ class Agent:
         """
         Example of a self, player_num, env)random agent
         """
-        pass
+        # need to create method that can calculate when the agents picks a bomb.
+        self.bombPicked = 0
 
     def next_move(self, game_state, player_state):
         """ 
@@ -24,11 +25,19 @@ class Agent:
         """
                 
         action = random.choice(Agent.actions)
+
+        # measuring the speed of our program the goal being faster than 1e-3 seconds (100ms)
         begin = time()  
         print(self.arrayVision(game_state, player_state))#print(game_state.all_blocks)
         end = time()
         # total time taken
         print(f"total runtime of the program is {end - begin}")
+        print(f"time left{.1 -(end - begin)}/100ms")
+
+        # metrics for the gym to be used later
+        print(f'GameOver? {game_state.is_over}, step:{game_state.tick_number}')
+        # also want to add a reward everytime he picks a bomb
+        print(f'agent hp:{player_state.hp} bomb Power:{player_state.power}')
         return action
 
     def arrayVision(self, game_state, player_state):

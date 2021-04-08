@@ -31,6 +31,7 @@ class AINetMK1(nn.Module):
         data = F.leaky_relu(self.fc2(data))
         data = F.leaky_relu(self.fc3(data))
         data = self.fc4(data)
+        # one of the 6 action ['','u','d','l','r','p']
         return F.log_softmax(data, dim=1)
 
 net = AINetMK1()
@@ -78,3 +79,13 @@ output = net(testLayout)
 
 # need to map the output with an action.
 print(output)
+
+
+# saving the model (test)
+import os
+torch.save(net.state_dict(),os.path.join(os.path.dirname(__file__),'liquidSun_weights.pth'))
+
+# To load model weights, you need to create an instance of the same model first, and then load the parameters
+model = AINetMK1()
+model.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__),'liquidSun_weights.pth')))
+print(model.eval)
