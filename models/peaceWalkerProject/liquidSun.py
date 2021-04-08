@@ -34,58 +34,54 @@ class AINetMK1(nn.Module):
         # one of the 6 action ['','u','d','l','r','p']
         return F.log_softmax(data, dim=1)
 
-net = AINetMK1()
-print(net)
+
+def arenaGridEncoder(grid):
+    """
+    Takes an object numpy array and convert it to a Tensor dtype float32.
+    The encoding dictionary is specific to the coderone arena.
+    """
+
+    # Encoding the input data
+    encoderDict = {None:0,'X':1,'E':2,'b':3,'a':4,'t':5,'ob':6,'sb':7,'id':8}
+    for rowidx, row in enumerate(grid):
+        for colidx, item in enumerate(row):
+            grid[rowidx][colidx] = encoderDict[item]
+    # the default is float32 
+    # if I want to change later https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-double-but-got-scalar-type-float-for-argument-2-weight/38961/8
+    grid = grid.astype('float32')
+    return torch.from_numpy(grid).view(-1,10*12)
 
 
-# test data
-# data to test a single pass in the NN
-testLayout = np.array([['id', 'ob' ,None ,None ,'id', None, None, None, None, None, 'ob', 'id'],
-                        ['sb', None, None, None, 'a', None, 'sb', None, None, None, None, 'sb'],
-                        [None, 'id', 'ob', None, None, None, None, None, None, 'id', 'sb', None],
-                        [None, 'sb', None, 'sb', 'sb', 'id', None, 'id', 'id', None, None, 'sb'],
-                        [None, None, None, None, None, None, None, 'sb', 'id', 'sb', None, 'id'],
-                        [None, None, 'sb', 'id', None, 'E' ,None ,'X', None, None, None, None],
-                        [None, 'id', None, None, None, None, None, None, 'ob', None, None, None],
-                        [None, 'id', 'sb', None, None, 'a' ,'sb' ,None ,'id', 'id', None, 'id'],
-                        [None, 'ob', None, 'a' ,None ,None ,None ,None ,'id', None, None, 'sb'],
-                        [None, None, None, None, 'a' ,'sb' ,None ,None ,None, 'sb', 'id', None]],dtype='object')
 
-print(testLayout)
-print(testLayout.dtype)
+if __name__ == '__main__':
 
-# Encoding the input data
-encoderDict = {None:0,'X':1,'E':2,'b':3,'a':4,'t':5,'ob':6,'sb':7,'id':8}
-for rowidx, row in enumerate(testLayout):
-    for colidx, item in enumerate(row):
-        testLayout[rowidx][colidx] = encoderDict[item]
-# the default is float32 
-# if I want to change later https://discuss.pytorch.org/t/runtimeerror-expected-object-of-scalar-type-double-but-got-scalar-type-float-for-argument-2-weight/38961/8
-testLayout = testLayout.astype('float32')
+    net = AINetMK1()
 
-environmentUniqueValue = np.unique(testLayout)
-print(environmentUniqueValue)
+    # test data
+    # data to test a single pass in the NN
+    testLayout = np.array([['id', 'ob' ,None ,None ,'id', None, None, None, None, None, 'ob', 'id'],
+                            ['sb', None, None, None, 'a', None, 'sb', None, None, None, None, 'sb'],
+                            [None, 'id', 'ob', None, None, None, None, None, None, 'id', 'sb', None],
+                            [None, 'sb', None, 'sb', 'sb', 'id', None, 'id', 'id', None, None, 'sb'],
+                            [None, None, None, None, None, None, None, 'sb', 'id', 'sb', None, 'id'],
+                            [None, None, 'sb', 'id', None, 'E' ,None ,'X', None, None, None, None],
+                            [None, 'id', None, None, None, None, None, None, 'ob', None, None, None],
+                            [None, 'id', 'sb', None, None, 'a' ,'sb' ,None ,'id', 'id', None, 'id'],
+                            [None, 'ob', None, 'a' ,None ,None ,None ,None ,'id', None, None, 'sb'],
+                            [None, None, None, None, 'a' ,'sb' ,None ,None ,None, 'sb', 'id', None]],dtype='object')
 
-# test numpy array without nonetype entries
-print(testLayout)
-print(testLayout.dtype)
+    testLayout = arenaGridEncoder(testLayout)
+    output = net(testLayout)
 
-print(testLayout.shape)
-testLayout = torch.from_numpy(testLayout)
-# flattening the grid
-testLayout = testLayout.view(-1,10*12)
-print(testLayout)
-output = net(testLayout)
-
-# need to map the output with an action.
-print(output)
+    # need to map the output with an action.
+    print(output)
 
 
-# saving the model (test)
-import os
-torch.save(net.state_dict(),os.path.join(os.path.dirname(__file__),'liquidSun_weights.pth'))
+    # saving the model (test)
+    import os
+    torch.save(net.state_dict(),os.path.join(os.path.dirname(__file__),'liquidSun_weights.pth'))
 
-# To load model weights, you need to create an instance of the same model first, and then load the parameters
-model = AINetMK1()
-model.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__),'liquidSun_weights.pth')))
-print(model.eval)
+    # To load model weights, you need to create an instance of the same model first, and then load the parameters
+    model = AINetMK1()
+    model.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__),'liquidSun_weights.pth')))
+    print(model.eval)
