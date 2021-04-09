@@ -12,7 +12,9 @@ class Client:
 		self.is_endless = self.config.get('endless', False)
 		self.paused = False # self.config.get('start_paused', False)
 		self.single_step = False # self.config.get('single_step', False)
-	        self.oneMoreStep = False	
+                self.oneMoreStep = False
+
+
 	def _update(self, tick_step):
 		self.game.tick(tick_step)
 
