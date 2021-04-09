@@ -1,0 +1,1 @@
+{"general_settings": {"info": true, "mode": "training"}, "exploration_settings": {"epsilon": 0.7787764418703357, "EPSILON_DECAY": 0.99975, "MIN_EPSILON": 0.001}, "episode_data": {"reward": 0}}
