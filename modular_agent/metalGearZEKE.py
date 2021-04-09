@@ -6,16 +6,43 @@ import random
 import numpy as np
 # measuring efficiency
 from time import time
+from models.peaceWalkerProject.liquidSun import AINetMK1,arenaGridEncoder
+import torch
+import os
+import json
+
+with open(os.path.join(os.path.dirname(__file__),"metalGearZekeConfig.json")) as json_data_file:
+    # note json text need a space between key: value
+    trainingConfig = json.load(json_data_file)
+
+# Exploration settings
+epsilon = trainingConfig['exploration_settings']['epsilon']  # not a constant, going to be decayed
+EPSILON_DECAY = trainingConfig['exploration_settings']['EPSILON_DECAY']
+MIN_EPSILON = trainingConfig['exploration_settings']['MIN_EPSILON']
+
+# General settings
+info = trainingConfig['general_settings']['info']
 
 class Agent:
 
-    actions = ['','u','d','l','r','p']
+    actions = {0:'',1:'u',2:'d',3:'l',4:'r',5:'p'}
+
+
     def __init__(self):
         """
         Example of a self, player_num, env)random agent
         """
+        # want to know what was the action picked (whether it was random or NN)
+        self.actionEpsilon = None
         # need to create method that can calculate when the agents picks a bomb.
         self.bombPicked = 0
+        # init Zeke's NN
+        self.ai = AINetMK1()
+        # load the weight
+        self.ai.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__),'../models/peaceWalkerProject/liquidSun_weights.pth')))
+        print('Weights loaded')
+        print(self.ai.eval)
+
 
     def next_move(self, game_state, player_state):
         """ 
@@ -24,21 +51,47 @@ class Agent:
         Anyway, at the moment the agent selects an action at random.
         """
                 
-        action = random.choice(Agent.actions)
-
+        # hacked the game files slightly to allow for one more round after game over to use the over flag to save the weights
+        if game_state.is_over == True:
+            print(f'Saving weights')
+            torch.save(self.ai.state_dict(),os.path.join(os.path.dirname(__file__),'../models/peaceWalkerProject/liquidSun_weights.pth'))
+            return None
+        
         # measuring the speed of our program the goal being faster than 1e-3 seconds (100ms)
         begin = time()  
-        print(self.arrayVision(game_state, player_state))#print(game_state.all_blocks)
-        end = time()
-        # total time taken
-        print(f"total runtime of the program is {end - begin}")
-        print(f"time left{.1 -(end - begin)}/100ms")
+        # Non random action
+        if np.random.random() > epsilon:
+            self.actionEpsilon = 'NeuralNetwork'
+            # Get action from Q table
+            npVisionGrid = self.arrayVision(game_state, player_state)
+            if info:
+                print(npVisionGrid)
 
-        # metrics for the gym to be used later
-        print(f'GameOver? {game_state.is_over}, step:{game_state.tick_number}')
-        # also want to add a reward everytime he picks a bomb
-        print(f'agent hp:{player_state.hp} bomb Power:{player_state.power}')
+            decision = self.ai(arenaGridEncoder(npVisionGrid))
+            action = Agent.actions[int(torch.argmax(decision))] 
+
+        # random action (epsilon decays over training)
+        else:
+            self.actionEpsilon = 'random'
+            # Get random action
+            action = Agent.actions[random.randint(0,5)]
+
+        end = time()
+
+        #!!! update the config file with the reward. Once we get enough training samples we want to use next steps so that the nn can train (may take a while)
+        if info:
+            print(f'action choosen: {action}, action was decided by: {self.actionEpsilon}')
+
+            #time metrics
+            print(f"total runtime of the program is {round(end - begin,6)}")
+            print(f"time left{round(.1 -(end - begin),6)}/100ms")
+
+            # metrics for the gym to be used later
+            print(f'GameOver? {game_state.is_over}, step:{game_state.tick_number}')
+            # also want to add a reward everytime he picks a bomb
+            print(f'agent hp:{player_state.hp} bomb Power:{player_state.power}')
         return action
+
 
     def arrayVision(self, game_state, player_state):
         """
