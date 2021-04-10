@@ -4,6 +4,7 @@ Metal Gear ZEKE was the first fully bipedal tank. It was designed by the Militai
 '''
 import random
 import numpy as np
+import pickle
 # measuring efficiency
 from time import time
 from models.peaceWalkerProject.liquidSun import AINetMK1,arenaGridEncoder
@@ -11,7 +12,7 @@ import torch
 import os
 import json
 
-with open(os.path.join(os.path.dirname(__file__),"metalGearZekeConfig.json")) as json_data_file:
+with open(os.path.join(os.path.dirname(__file__),"metalGearZekeConfig.json"),'r') as json_data_file:
     # note json text need a space between key: value
     trainingConfig = json.load(json_data_file)
 
@@ -19,6 +20,8 @@ with open(os.path.join(os.path.dirname(__file__),"metalGearZekeConfig.json")) as
 epsilon = trainingConfig['exploration_settings']['epsilon']  # not a constant, going to be decayed
 EPSILON_DECAY = trainingConfig['exploration_settings']['EPSILON_DECAY']
 MIN_EPSILON = trainingConfig['exploration_settings']['MIN_EPSILON']
+
+# Episode specific 
 
 # General settings
 info = trainingConfig['general_settings']['info']
@@ -32,16 +35,29 @@ class Agent:
         """
         Example of a self, player_num, env)random agent
         """
+        # tracked states for data in reinforcement learning
+        self.lastAction = ''
+        self.currentState = None
+        self.lastReward = 0
+        #session reward
+        self.reward = 0
+        self.episodeReward = 0
+        #Agent hp
+        self.currentHP = 3 #init value, we start with three
         # want to know what was the action picked (whether it was random or NN)
         self.actionEpsilon = None
         # need to create method that can calculate when the agents picks a bomb.
-        self.bombPicked = 0
+        self.bombCount = 3 # init value, we start with three
         # init Zeke's NN
         self.ai = AINetMK1()
         # load the weight
         self.ai.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__),'../models/peaceWalkerProject/liquidSun_weights.pth')))
+        # init loading info
         print('Weights loaded')
-        print(self.ai.eval)
+        with open(os.path.join(os.path.dirname(__file__),'../models/peaceWalkerProject/liquidSun_deque'),'rb') as dequeFile:
+            self.ai.replay_memory = pickle.load(dequeFile)
+        print('Previous training data loaded')
+        print(f'Showing the NN structure {self.ai.eval}')
 
 
     def next_move(self, game_state, player_state):
@@ -51,30 +67,46 @@ class Agent:
         Anyway, at the moment the agent selects an action at random.
         """
                 
-        # hacked the game files slightly to allow for one more round after game over to use the over flag to save the weights
-        if game_state.is_over == True:
-            print(f'Saving weights')
-            torch.save(self.ai.state_dict(),os.path.join(os.path.dirname(__file__),'../models/peaceWalkerProject/liquidSun_weights.pth'))
-            return None
+        self.reward = self.rewardSystem(player_state)
+        self.episodeReward += self.reward
         
         # measuring the speed of our program the goal being faster than 1e-3 seconds (100ms)
         begin = time()  
-        # Non random action
-        if np.random.random() > epsilon:
-            self.actionEpsilon = 'NeuralNetwork'
-            # Get action from Q table
-            npVisionGrid = self.arrayVision(game_state, player_state)
-            if info:
-                print(npVisionGrid)
 
-            decision = self.ai(arenaGridEncoder(npVisionGrid))
-            action = Agent.actions[int(torch.argmax(decision))] 
+        # Get action from Q table
+        encodedGrid = arenaGridEncoder(self.arrayVision(game_state, player_state))
 
-        # random action (epsilon decays over training)
+        # at the start of the game there is no previous state or action 
+        if game_state.tick_number == 0:
+            self.currentState = encodedGrid
+
+        # hacked the game files slightly to allow for one more round after game over to use the over flag to save the weights
+        if game_state.is_over == True:
+            # last action may have to be a number and not a string. double check rewards.
+            self.ai.update_replay_memory((self.currentState, self.lastAction, self.reward, encodedGrid, game_state.is_over))
+            self.gameOverSaving()
+            return None
+
         else:
-            self.actionEpsilon = 'random'
-            # Get random action
-            action = Agent.actions[random.randint(0,5)]
+
+            # Non random action
+            if np.random.random() > epsilon:
+                self.actionEpsilon = 'NeuralNetwork'
+                if info:
+                    print(encodedGrid)
+
+                decision = self.ai(encodedGrid)
+                action = Agent.actions[int(torch.argmax(decision))] 
+
+            # random action (epsilon decays over training)
+            else:
+                self.actionEpsilon = 'random'
+                # Get random action
+                action = Agent.actions[random.randint(0,5)]
+
+
+        self.ai.update_replay_memory((self.currentState, self.lastAction, self.reward, encodedGrid, game_state.is_over))
+
 
         end = time()
 
@@ -89,10 +121,68 @@ class Agent:
             # metrics for the gym to be used later
             print(f'GameOver? {game_state.is_over}, step:{game_state.tick_number}')
             # also want to add a reward everytime he picks a bomb
-            print(f'agent hp:{player_state.hp} bomb Power:{player_state.power}')
+            print(f'agent hp:{player_state.hp}, ammo: {player_state.ammo} bomb Power:{player_state.power}, current reward state: {self.reward} total reward {self.episodeReward}')
+            print(f'size of the data {len(self.ai.replay_memory)}')
+        
+        self.lastAction = action
+        self.currentState = encodedGrid
+        self.lastReward = self.reward
         return action
 
 
+    def gameOverSaving(self):
+        """
+        Method that saves the game data. 
+
+        Known issue: if our agent dies it doesn't allow to save
+        """
+        print(f'Saving weights')
+        torch.save(self.ai.state_dict(),os.path.join(os.path.dirname(__file__),'../models/peaceWalkerProject/liquidSun_weights.pth'))
+
+        #saving the trainingData
+        with open(os.path.join(os.path.dirname(__file__),'../models/peaceWalkerProject/liquidSun_deque'),'wb') as dequeFile:
+            print('Pickling the trainingData')
+            pickle.dump(self.ai.replay_memory,dequeFile)
+        # saving the relevant episode data in the config file
+        trainingConfig['episode_data']['reward'] = self.episodeReward
+        with open(os.path.join(os.path.dirname(__file__),"metalGearZekeConfig.json"),'w') as json_data_file:
+            print('Saving the config file')
+            json.dump(trainingConfig,json_data_file)
+        
+
+    def rewardSystem(self, player_state):
+        """
+        Reward system based on ammo picked and damage received.
+        
+        Need to find a way to get the opponent hp.
+        """
+        reward = 0
+        # hp reward calculation
+        if self.currentHP != player_state.hp:
+            print('HP lost')
+            self.currentHP = player_state.hp
+            if self.currentHP == 2:
+               reward -= 100
+            elif self.currentHP == 1:
+                reward -= 200
+            elif self.currentHP == 0:
+                reward -= 400
+                print("Do not picture the Game Over screen, instead visualize how happy you'll be once the mission is complete")
+
+        # ammo reward calculation
+        #picked a bomb
+        if self.bombCount < player_state.ammo:
+            print('picked a bomb OSP')
+            reward += 25
+        # planted a bomb
+        elif self.bombCount > player_state.ammo:
+            print('bomb has been planted')
+        # updating the bomb count
+        self.bombCount = player_state.ammo
+
+        return reward
+
+    
     def arrayVision(self, game_state, player_state):
         """
 
