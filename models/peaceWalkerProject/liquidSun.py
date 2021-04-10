@@ -7,21 +7,43 @@ from torchvision import transforms
 import torch.nn as nn
 import torch.nn.functional as F
 
+from collections import deque
+
+REPLAY_MEMORY_SIZE = 50_000  # How many last steps to keep for model training
+MIN_REPLAY_MEMORY_SIZE = 1_000  # Minimum number of steps in a memory to start training
+MINIBATCH_SIZE = 64  # How many steps (samples) to use for training
+
 class AINetMK1(nn.Module):
     """
     Very simple fully connected neural network to confirm that the input and output matches.
+
+    Contains:
+        - model layer definition
+        - forward methods for the data to move through
+        - optimizer for gradient descent
+        - train method
     """
     def __init__(self):
         """
         Method were we defined the Input, hidden layers, and output of the neural network.
         """
         super().__init__()
-        # input will be each square of the game (10x12 grid) have to figureouyt the encoding.
+        # An array with last n steps for training
+        self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)
+
+        # input will be each square of the game (10x12 grid)
         self.fc1 = nn.Linear(10*12,32)
         self.fc2 = nn.Linear(32,32)
         self.fc3 = nn.Linear(32,32)
         # there are only 6 actions: ['','u','d','l','r','p']
         self.fc4 = nn.Linear(32,6)
+
+
+    # Adds step's data to a memory replay array
+    # (observation space, action, reward, new observation space, done)
+    def update_replay_memory(self, transition):
+        self.replay_memory.append(transition)
+
 
     def forward(self, data):
         """
@@ -33,6 +55,21 @@ class AINetMK1(nn.Module):
         data = self.fc4(data)
         # one of the 6 action ['','u','d','l','r','p']
         return F.log_softmax(data, dim=1)
+
+
+    def optimizer(self):
+        """
+        Optimizer for NN
+        """
+        pass
+
+
+    def train(self,loader, epochs=10, batch_size=128):
+        """
+        Method that defines how the NN will be trained
+
+        """
+        pass
 
 
 def arenaGridEncoder(grid):
