@@ -12,7 +12,7 @@ class Client:
 		self.is_endless = self.config.get('endless', False)
 		self.paused = False # self.config.get('start_paused', False)
 		self.single_step = False # self.config.get('single_step', False)
-                self.oneMoreStep = False
+		self.oneMoreStep = False
 
 
 	def _update(self, tick_step):
@@ -30,8 +30,8 @@ class Client:
 		try:
 			while not self.game.is_over and not self.oneMoreStep:
                                 # hack for training the robot allows for one extra step in saving the weights
-                                if self.game.is_over:
-                                    self.oneMoreStep = True
+				if self.game.is_over:
+					self.oneMoreStep = True
 				logger.info(f"game-step [{self.game.tick_counter}/{self.game.max_iterations}]")
 				
 				cycle_start_time = time.time()
