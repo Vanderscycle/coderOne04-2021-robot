@@ -649,8 +649,8 @@ class Game:
 
 	def _update_agent(self, delta_time: float, pid, agent, game_map):
 		player = self.players[pid] if pid in self.players else None
-		if not player or not player.is_alive:
-			return
+		#if not player or not player.is_alive:
+		#	return
 
 		player_state = self._player_state(pid, player)
 		agent.update(game_map, player_state)
