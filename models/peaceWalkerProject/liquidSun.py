@@ -1,11 +1,14 @@
-import numpy as np
-
+import numpy as np 
+import random
 import torch
 import torchvision
 from torchvision import transforms
 
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter()
 
 from collections import deque
 
@@ -30,7 +33,8 @@ class AINetMK1(nn.Module):
         super().__init__()
         # An array with last n steps for training
         self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)
-
+        # tensorboard to track progress
+        self.tensorboard = None
         # input will be each square of the game (10x12 grid)
         self.fc1 = nn.Linear(10*12,32)
         self.fc2 = nn.Linear(32,32)
@@ -61,15 +65,27 @@ class AINetMK1(nn.Module):
         """
         Optimizer for NN
         """
-        pass
+        return optim.Adam(net.parameters(), lr=0.001)
 
 
-    def train(self,loader, epochs=10, batch_size=128):
+    def train(self):
         """
         Method that defines how the NN will be trained
 
         """
-        pass
+        # Start training only if certain number of samples is already saved
+        if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
+            return
+         # Get a minibatch of random samples from memory replay table
+        minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
+
+
+if torch.cuda.is_available():  
+    print('GPU available, using GPU')
+    device = "cuda:0" 
+else:  
+    print('No GPU available, using CPU')
+    device = "cpu"  
 
 
 def arenaGridEncoder(grid):
