@@ -42,7 +42,7 @@ def last2FramesSubstraction(previousFrame, currentFrame):
                 explosionList.append((9 - rowidx,colidx))
                 #print(explosionList)
 
-            elif (currentFrame[rowidx][colidx] in ['E','X','id']):
+            elif (currentFrame[rowidx][colidx] in ['E','X','id','sb','ob']):
                 pass
 
             elif currentFrame[rowidx][colidx] is None and previousFrame[rowidx][colidx]!='b':
@@ -96,7 +96,7 @@ def last2FramesSubstraction(previousFrame, currentFrame):
         for x in range(explosion[0], maxRow):
 
             # there's a wall at the above the explosion
-            if (currentFrame[9-x][explosion[1]] == 'id'): 
+            if (currentFrame[9-x][explosion[1]] in ['id','sb','ob']): 
                 break
 
             # empty space so the explosion propagate
@@ -112,7 +112,7 @@ def last2FramesSubstraction(previousFrame, currentFrame):
         for x in range(explosion[0], minRow,-1):
 
             # there's a wall at bellow explosion
-            if (currentFrame[9-x][explosion[1]] == 'id'): 
+            if (currentFrame[9-x][explosion[1]] in ['id','sb','ob']): 
                 break
 
             # empty space so the explosion propagate
@@ -128,7 +128,7 @@ def last2FramesSubstraction(previousFrame, currentFrame):
         # mapping the columns blast
         for y in range(explosion[1], maxCol):
             # there's a wall at the right of the explosion
-            if currentFrame[9-explosion[0]][y] == 'id':
+            if currentFrame[9-explosion[0]][y] in ['id','sb','ob']:
                 print('gtfo',currentFrame[9-explosion[0]][y] )
                 break
             # empty space so the explosion propagate
@@ -142,7 +142,7 @@ def last2FramesSubstraction(previousFrame, currentFrame):
                     currentFrame[9-explosion[0]][y] = '['+currentFrame[9-explosion[0]][y]+']'
 
         for y in range(explosion[1], minCol,-1):
-            if currentFrame[9-explosion[0]][y] == 'id':
+            if currentFrame[9-explosion[0]][y] in ['id','sb','ob']:
                 break
             # empty space so the explosion propagate
             elif currentFrame[9-explosion[0]][y] == '': 

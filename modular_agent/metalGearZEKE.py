@@ -303,8 +303,8 @@ class Agent:
                     print(f'explosion at (y:{9 - rowidx},x:{colidx})')
                     explosionList.append((9 - rowidx,colidx))
                     #print(explosionList)
-
-                elif (currentFrame[rowidx][colidx] in ['E','X','id','sb']):
+                # possible that the ob will be removed next patch
+                elif (currentFrame[rowidx][colidx] in ['E','X','id','sb','ob']):
                     pass
 
                 elif currentFrame[rowidx][colidx] is None and previousFrame[rowidx][colidx]!='b':
@@ -358,7 +358,7 @@ class Agent:
             for x in range(explosion[0], maxRow):
 
                 # there's a wall at the above the explosion
-                if (currentFrame[9-x][explosion[1]] in ['id','sb']): 
+                if (currentFrame[9-x][explosion[1]] in ['id','sb','ob']): 
                     break
 
                 # empty space so the explosion propagate
@@ -374,7 +374,7 @@ class Agent:
             for x in range(explosion[0], minRow,-1):
 
                 # there's a wall at bellow explosion
-                if (currentFrame[9-x][explosion[1]] in ['id','sb']): 
+                if (currentFrame[9-x][explosion[1]] in ['id','sb','ob']): 
                     break
 
                 # empty space so the explosion propagate
@@ -390,7 +390,7 @@ class Agent:
             # mapping the columns blast
             for y in range(explosion[1], maxCol):
                 # there's a wall at the right of the explosion
-                if currentFrame[9-explosion[0]][y] in ['id','sb']:
+                if currentFrame[9-explosion[0]][y] in ['id','sb','ob']:
                     break
                 # empty space so the explosion propagate
                 elif currentFrame[9-explosion[0]][y] == '': 
@@ -403,7 +403,7 @@ class Agent:
                         currentFrame[9-explosion[0]][y] = '['+currentFrame[9-explosion[0]][y]+']'
 
             for y in range(explosion[1], minCol -1,-1):
-                if currentFrame[9-explosion[0]][y]  in ['id','sb']:
+                if currentFrame[9-explosion[0]][y]  in ['id','sb','ob']:
                     break
                 # empty space so the explosion propagate
                 elif currentFrame[9-explosion[0]][y] == '': 
